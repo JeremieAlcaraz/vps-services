@@ -15,18 +15,11 @@ services:
     pull_policy: always
     environment:
       - NODE_ENV=production
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_HOST=${POSTGRES_HOST}
       - DATABASE_URL=postgresql://infisical:infisical@db:5432/infisical
       - REDIS_URL=redis://redis:6379
       - AUTH_SECRET=5lrMXKKWCVocS/uerPsl7V+TX/aaUaI7iDkgl3tSmLE=
       - ENCRYPTION_KEY=6c1fe4e407b8911c104518103505b218
-      - POSTGRES_PORT=${POSTGRES_PORT}
-      - REDIS_HOST=${REDIS_HOST}
       #- AUTH_SECRET=${AUTH_SECRET}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
     ports:
       - "8080:8080"
     networks:
@@ -63,15 +56,15 @@ services:
     image: postgres:14-alpine
     restart: always
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=infisical
+      - POSTGRES_PASSWORD=infisical
+      - POSTGRES_DB=infisical
     volumes:
       - pg_data:/var/lib/postgresql/data
     networks:
       - infisical
     healthcheck:
-      test: "pg_isready --username=${POSTGRES_USER} && psql --username=${POSTGRES_USER} --list"
+      test: "pg_isready --username=infisical && psql --username=infisical --list"
       interval: 5s
       timeout: 10s
       retries: 10
