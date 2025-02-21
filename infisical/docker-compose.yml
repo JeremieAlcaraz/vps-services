@@ -1,4 +1,3 @@
-
 services:
   backend:
     container_name: infisical-backend
@@ -20,6 +19,7 @@ services:
       - infisical
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=traefik"    # Ajouté pour forcer l'utilisation du réseau traefik
       - "traefik.http.routers.infisical.rule=Host(`infisical.jeremiealcaraz.com`)"
       - "traefik.http.routers.infisical.entrypoints=websecure"
       - "traefik.http.routers.infisical.tls.certresolver=mytlschallenge"
