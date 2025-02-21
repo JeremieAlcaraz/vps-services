@@ -13,21 +13,22 @@ services:
         condition: service_started
     image: infisical/infisical:latest-postgres
     pull_policy: always
-
-    # Charge toutes les variables depuis le fichier .env
-    env_file: .env
-
-    # On force simplement NODE_ENV en production ici
     environment:
       - NODE_ENV=production
-
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_URL=${REDIS_URL}
+      - AUTH_SECRET=${AUTH_SECRET}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
     ports:
       - "8080:8080"
-
     networks:
       - traefik
       - infisical
-
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.infisical.rule=Host(`infisical.jeremiealcaraz.com`)"
@@ -42,16 +43,12 @@ services:
     image: redis
     container_name: infisical-redis
     restart: always
-    
-    # Charge également le .env (si jamais vous voulez y définir d'autres variables pour Redis)
-    env_file: .env
-    
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
-
+    ports:
+      - "6379:6379"
     networks:
       - infisical
-
     volumes:
       - redis_data:/data
 
@@ -62,34 +59,26 @@ services:
     container_name: infisical-db
     image: postgres:14-alpine
     restart: always
-
-    # Charge les variables POSTGRES_... depuis .env
-    env_file: .env
-
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - pg_data:/var/lib/postgresql/data
-
     networks:
       - infisical
-
     healthcheck:
       test: "pg_isready --username=${POSTGRES_USER} && psql --username=${POSTGRES_USER} --list"
       interval: 5s
       timeout: 10s
       retries: 10
 
-# --------------------------------------------------------------------------
-# 4) Définition des Volumes (Persistance des données)
-# --------------------------------------------------------------------------
 volumes:
   pg_data:
     driver: local
   redis_data:
     driver: local
 
-# --------------------------------------------------------------------------
-# 5) Définition des Réseaux
-# --------------------------------------------------------------------------
 networks:
   traefik:
     external: true
