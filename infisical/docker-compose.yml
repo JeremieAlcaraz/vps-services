@@ -20,14 +20,13 @@ services:
       - POSTGRES_DB=infisical
       - POSTGRES_HOST=db  # Définit l'hôte PostgreSQL
       - POSTGRES_PORT=5432
-      - DATABASE_URL=postgresql://infisical:infisical@db:5432/infisical  # URL complète
       - REDIS_HOST=redis
       - REDIS_URL=redis://redis:6379
       - AUTH_SECRET=5lrMXKKWCVocS/uerPsl7V+TX/aaUaI7iDkgl3tSmLE=
       - ENCRYPTION_KEY=6c1fe4e407b8911c104518103505b218
-      #- POSTGRES_USER=${POSTGRES_USER}  # Identifiant DB, à définir dans Portainer
-      #- POSTGRES_PASSWORD=${POSTGRES_PASSWORD}  # Mot de passe DB, à définir dans Portainer
-      #- POSTGRES_DB=${POSTGRES_DB}  # Nom de la base de données Infisical
+      - POSTGRES_USER=${POSTGRES_USER}  # Identifiant DB, à définir dans Portainer
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}  # Mot de passe DB, à définir dans Portainer
+      - POSTGRES_DB=${POSTGRES_DB}  # Nom de la base de données Infisical
      
     ports:
       - "8080:8080"  # Exposition du service sur le port 8080 (évite conflit avec le port 80)
@@ -63,9 +62,9 @@ services:
     image: postgres:14-alpine  # Image PostgreSQL allégée
     restart: always  # Redémarre automatiquement si besoin
     environment:
-       - POSTGRES_PASSWORD=infisical
-       - POSTGRES_USER=infisical
-       - POSTGRES_DB=infisical
+      - POSTGRES_USER=${POSTGRES_USER}  # Identifiant DB, à définir dans Portainer
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}  # Mot de passe DB, à définir dans Portainer
+      - POSTGRES_DB=${POSTGRES_DB}  # Nom de la base de données Infisical
    
     
     # 
@@ -79,10 +78,10 @@ services:
     networks:
       - infisical  # Réseau interne pour la communication entre services
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "infisical"]  # Vérifie si PostgreSQL est prêt
-      interval: 5s  # Vérification toutes les 5 secondes
-      timeout: 10s  # Délai d'attente max de 10 secondes
-      retries: 10  # Nombre de tentatives avant échec
+      test: "pg_isready --username=${POSTGRES_USER} && psql --username=${POSTGRES_USER} --list"
+      interval: 5s
+      timeout: 10s
+      retries: 10
 
 # --------------------------------------------------------------------------
 # 4) Définition des Volumes (Persistance des données)
