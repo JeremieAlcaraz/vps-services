@@ -10,18 +10,16 @@ services:
         condition: service_started
     image: infisical/infisical:latest-postgres
     pull_policy: always
-    env_file: stack.env
     ports:
       - 80:8080
     environment:
-      - NODE_ENV=production
+      - $NODE_ENV=production
     networks:
       - infisical
 
   redis:
     image: redis
     container_name: infisical-dev-redis
-    env_file: stack.env
     restart: always
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
@@ -36,13 +34,12 @@ services:
     container_name: infisical-db
     image: postgres:14-alpine
     restart: always
-    env_file: stack.env
     volumes:
       - pg_data:/var/lib/postgresql/data
     networks:
       - infisical
     healthcheck:
-      test: "pg_isready --username=${POSTGRES_USER} && psql --username=${POSTGRES_USER} --list"
+      test: "pg_isready --username=${$POSTGRES_USER} && psql --username=${$POSTGRES_USER} --list"
       interval: 5s
       timeout: 10s
       retries: 10
