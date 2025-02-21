@@ -1,3 +1,4 @@
+version: '3.8'
 
 services:
   # --------------------------------------------------------------------------
@@ -5,78 +6,66 @@ services:
   # --------------------------------------------------------------------------
   backend:
     container_name: infisical-backend
-    restart: unless-stopped  # Redémarre automatiquement sauf si arrêté manuellement
-    depends_on:  # Attente des services critiques avant de démarrer
+    restart: unless-stopped
+    depends_on:
       db:
-        condition: service_healthy  # Attendre que la base de données soit prête
+        condition: service_healthy
       redis:
-        condition: service_started  # Attendre que Redis soit lancé
-    image: infisical/infisical:latest-postgres  # Image Infisical avec PostgreSQL
-    pull_policy: always  # Toujours récupérer la dernière image
+        condition: service_started
+    image: infisical/infisical:latest-postgres
+    pull_policy: always
     environment:
-      - NODE_ENV=production
-      - POSTGRES_USER=infisical
-      - POSTGRES_PASSWORD=infisical
-      - POSTGRES_DB=infisical
-      - POSTGRES_HOST=db  # Définit l'hôte PostgreSQL
-      - POSTGRES_PORT=5432
-      - REDIS_HOST=redis
-      - REDIS_URL=redis://redis:6379
-      - AUTH_SECRET=5lrMXKKWCVocS/uerPsl7V+TX/aaUaI7iDkgl3tSmLE=
-      - ENCRYPTION_KEY=6c1fe4e407b8911c104518103505b218
-      - POSTGRES_USER=${POSTGRES_USER}  # Identifiant DB, à définir dans Portainer
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}  # Mot de passe DB, à définir dans Portainer
-      - POSTGRES_DB=${POSTGRES_DB}  # Nom de la base de données Infisical
-     
+      - NODE_ENV=${NODE_ENV}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_URL=${REDIS_URL}
+      - AUTH_SECRET=${AUTH_SECRET}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
     ports:
-      - "8080:8080"  # Exposition du service sur le port 8080 (évite conflit avec le port 80)
+      - "8080:8080"
     networks:
-      - traefik  # Connecte Infisical au réseau Traefik pour le routage HTTPS
-      - infisical  # Réseau interne pour la communication entre services
+      - traefik
+      - infisical
     labels:
-      - "traefik.enable=true"  # Active Traefik pour ce conteneur
-      - "traefik.http.routers.infisical.rule=Host(`infisical.jeremiealcaraz.com`)"  # Associe Infisical à ce sous-domaine
-      - "traefik.http.routers.infisical.entrypoints=websecure"  # Utilise HTTPS
-      - "traefik.http.routers.infisical.tls.certresolver=mytlschallenge"  # Certificat TLS avec Let's Encrypt
-      - "traefik.http.services.infisical.loadbalancer.server.port=8080"  # Indique que le service écoute sur le port 8080
+      - "traefik.enable=true"
+      - "traefik.http.routers.infisical.rule=Host(`infisical.jeremiealcaraz.com`)"
+      - "traefik.http.routers.infisical.entrypoints=websecure"
+      - "traefik.http.routers.infisical.tls.certresolver=mytlschallenge"
+      - "traefik.http.services.infisical.loadbalancer.server.port=8080"
 
   # --------------------------------------------------------------------------
   # 2) Redis (Cache pour Infisical)
   # --------------------------------------------------------------------------
   redis:
-    image: redis  # Utilisation de l’image officielle Redis
+    image: redis
     container_name: infisical-redis
-    restart: always  # Redémarre automatiquement si le conteneur tombe
+    restart: always
     environment:
-      - ALLOW_EMPTY_PASSWORD=yes  # Permet d'utiliser Redis sans mot de passe (à éviter en production)
+      - ALLOW_EMPTY_PASSWORD=yes
     networks:
-      - infisical  # Réseau interne, utilisé uniquement par Infisical
+      - infisical
     volumes:
-      - redis_data:/data  # Persistance des données Redis
+      - redis_data:/data
 
   # --------------------------------------------------------------------------
   # 3) Base de Données PostgreSQL
   # --------------------------------------------------------------------------
   db:
     container_name: infisical-db
-    image: postgres:14-alpine  # Image PostgreSQL allégée
-    restart: always  # Redémarre automatiquement si besoin
+    image: postgres:14-alpine
+    restart: always
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}  # Identifiant DB, à définir dans Portainer
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}  # Mot de passe DB, à définir dans Portainer
-      - POSTGRES_DB=${POSTGRES_DB}  # Nom de la base de données Infisical
-   
-    
-    # 
-    #  - POSTGRES_USER=${POSTGRES_USER}  # Identifiant de connexion DB
-    #  - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}  # Mot de passe de la DB
-    #  - POSTGRES_DB=${POSTGRES_DB}  # Nom de la base de données
-    #
-      
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     volumes:
-      - pg_data:/var/lib/postgresql/data  # Stockage des données de la base pour éviter les pertes
+      - pg_data:/var/lib/postgresql/data
     networks:
-      - infisical  # Réseau interne pour la communication entre services
+      - infisical
     healthcheck:
       test: "pg_isready --username=${POSTGRES_USER} && psql --username=${POSTGRES_USER} --list"
       interval: 5s
@@ -87,13 +76,13 @@ services:
 # 4) Définition des Volumes (Persistance des données)
 # --------------------------------------------------------------------------
 volumes:
-  pg_data:  # Stocke les données PostgreSQL
-  redis_data:  # Stocke les données Redis
+  pg_data:
+  redis_data:
 
 # --------------------------------------------------------------------------
 # 5) Définition des Réseaux
 # --------------------------------------------------------------------------
 networks:
   traefik:
-    external: true  # Réseau existant géré par Traefik, ne doit pas être créé ici
-  infisical:  # Réseau interne pour la communication entre Infisical, Redis et PostgreSQL
+    external: true
+  infisical:
