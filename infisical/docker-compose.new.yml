@@ -15,7 +15,7 @@ services:
     networks:
       - infisical
     env_file:
-     - stack.env
+     - ../stack.env
 
   redis:
     image: redis
@@ -30,7 +30,7 @@ services:
     volumes:
       - redis_data:/data
     env_file:
-      - stack.env
+      - ../stack.env
 
   db:
     container_name: infisical-db
@@ -46,7 +46,7 @@ services:
       timeout: 10s
       retries: 10
     env_file:
-      - stack.env
+      - ../stack.env
 
 volumes:
   pg_data:
