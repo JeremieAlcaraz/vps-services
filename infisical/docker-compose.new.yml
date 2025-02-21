@@ -3,8 +3,6 @@ services:
   backend:
     container_name: infisical-backend
     restart: unless-stopped
-    env_file:
-     - stack.env
     depends_on:
       db:
         condition: service_healthy
@@ -16,11 +14,11 @@ services:
       - 91:8080
     networks:
       - infisical
+    env_file:
+     - stack.env
 
   redis:
     image: redis
-    env_file:
-      - stack.env
     container_name: infisical-dev-redis
     restart: always
     environment:
@@ -31,13 +29,13 @@ services:
       - infisical
     volumes:
       - redis_data:/data
+    env_file:
+      - stack.env
 
   db:
     container_name: infisical-db
     image: postgres:14-alpine
     restart: always
-    env_file:
-      - stack.env
     volumes:
       - pg_data:/var/lib/postgresql/data
     networks:
@@ -47,6 +45,8 @@ services:
       interval: 5s
       timeout: 10s
       retries: 10
+    env_file:
+      - stack.env
 
 volumes:
   pg_data:
