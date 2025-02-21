@@ -14,17 +14,21 @@ services:
         condition: service_started
     image: infisical/infisical:latest-postgres
     pull_policy: always
+
+    # Charge toutes les variables depuis le fichier .env
+    env_file: .env
+
+    # On force simplement NODE_ENV en production ici
     environment:
-      - NODE_ENV=${NODE_ENV}
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
-      - AUTH_SECRET=${AUTH_SECRET}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - NODE_ENV=production
+
     ports:
       - "8080:8080"
+
     networks:
       - traefik
       - infisical
+
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.infisical.rule=Host(`infisical.jeremiealcaraz.com`)"
@@ -39,10 +43,16 @@ services:
     image: redis
     container_name: infisical-redis
     restart: always
+    
+    # Charge également le .env (si jamais vous voulez y définir d'autres variables pour Redis)
+    env_file: .env
+    
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
+
     networks:
       - infisical
+
     volumes:
       - redis_data:/data
 
@@ -53,14 +63,16 @@ services:
     container_name: infisical-db
     image: postgres:14-alpine
     restart: always
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+
+    # Charge les variables POSTGRES_... depuis .env
+    env_file: .env
+
     volumes:
       - pg_data:/var/lib/postgresql/data
+
     networks:
       - infisical
+
     healthcheck:
       test: "pg_isready --username=${POSTGRES_USER} && psql --username=${POSTGRES_USER} --list"
       interval: 5s
@@ -72,7 +84,9 @@ services:
 # --------------------------------------------------------------------------
 volumes:
   pg_data:
+    driver: local
   redis_data:
+    driver: local
 
 # --------------------------------------------------------------------------
 # 5) Définition des Réseaux
@@ -81,3 +95,4 @@ networks:
   traefik:
     external: true
   infisical:
+    driver: bridge
