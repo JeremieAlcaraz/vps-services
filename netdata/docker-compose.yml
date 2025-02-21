@@ -1,0 +1,43 @@
+
+services:
+  netdata:
+    image: netdata/netdata
+    container_name: netdata
+    restart: unless-stopped
+    networks:
+      - traefik  # Connexion à Traefik via le même réseau
+    ports:
+      - "19999:19999"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.netdata.rule=Host(`netdata.jeremiealcaraz.com`)"
+      - "traefik.http.routers.netdata.entrypoints=websecure"
+      - "traefik.http.routers.netdata.tls.certresolver=mytlschallenge"
+      - "traefik.http.services.netdata.loadbalancer.server.port=19999"
+      # Label pour l'authentification basique (avec $ échappé) :
+      - "traefik.http.middlewares.netdata-auth.basicauth.users=user:$$apr1$$a3HwRC69$$4FUe.ipLg/h5liL99GBkc."
+      - "traefik.http.routers.netdata.middlewares=netdata-auth@docker"
+    cap_add:
+      - SYS_PTRACE
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - /opt/netdata/config:/etc/netdata    # Configuration persistante
+      - /opt/netdata/lib:/var/lib/netdata   # Données de Netdata
+      - /opt/netdata/cache:/var/cache/netdata # Cache temporaire
+      - /:/host/root:ro,rslave
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /var/log:/host/var/log:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+
+networks:
+  traefik:
+    external: true  # Connexion au réseau existant Docker qui s'appelle traefik
+
